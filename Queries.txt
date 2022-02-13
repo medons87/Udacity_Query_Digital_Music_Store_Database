@@ -1,0 +1,50 @@
+/* Query 1 */
+SELECT Name, COUNT(Name) Number_of_Albums
+FROM Album al
+JOIN Artist ar
+ON ar.ArtistId = al.ArtistId
+GROUP BY Name
+HAVING COUNT(Name) > 4
+ORDER BY Number_of_Albums DESC;
+
+
+/* Query 2 */
+SELECT ar.Name, COUNT(c.CustomerId) num_order
+FROM Customer c
+JOIN Invoice i
+ON c.CustomerId = i.CustomerId
+JOIN InvoiceLine il
+ON il.InvoiceId = i.InvoiceId
+JOIN Track t 
+ON il.TrackId = t.TrackId
+JOIN Album al
+ON t.AlbumId = al.AlbumId
+JOIN Artist ar
+ON al.ArtistId = ar.ArtistId
+GROUP BY ar.Name
+ORDER BY num_order DESC
+LIMIT 10;
+
+
+/* Query 3 */
+SELECT c.CustomerId, c.FirstName, c.LastName, SUM(i.total) total
+FROM Customer c
+JOIN Invoice i
+ON c.CustomerId = i.CustomerId
+GROUP BY c.CustomerId
+ORDER BY total;
+
+
+/* Query 4 */
+SELECT t1.Name, t1.Year, t1.total
+FROM(SELECT g.Name, strftime('%Y', i.InvoiceDate) Year, SUM(i.Total) total,
+	row_number() OVER (PARTITION BY strftime('%Y', i.InvoiceDate) ORDER BY SUM(i.Total) DESC) genre_rank
+	FROM Genre g
+	JOIN Track t
+	ON g.GenreId = t.GenreId
+	JOIN InvoiceLine il
+	ON t.TrackId = il.TrackId
+	JOIN Invoice i
+	ON il.InvoiceId = i.InvoiceId
+	GROUP BY 1,2) t1
+WHERE t1.genre_rank <= 3
